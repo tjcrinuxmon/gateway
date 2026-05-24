@@ -3,7 +3,7 @@ const { createProxyMiddleware } = require('http-proxy-middleware')
 
 const app = express()
 const PORT = process.env.GATEWAY_PORT || 3000
-const isProd = process.env.NODE_ENV === 'production'
+const isProd = process.env.NODE_ENV !== 'development'
 
 // Pre-create proxy instances
 const mkProxy = (target, opts = {}) =>
