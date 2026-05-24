@@ -1,0 +1,12 @@
+{
+  "name": "ine-deaj-gateway",
+  "version": "1.0.0",
+  "description": "Reverse-proxy gateway — unifica los 4 sistemas INE DEAJ en un solo puerto",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "http-proxy-middleware": "^3.0.3"
+  }
+}
