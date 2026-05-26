@@ -10,20 +10,11 @@ const mkProxy = (target, opts = {}) =>
   createProxyMiddleware({ target, changeOrigin: true, ...opts })
 
 const pPortal   = mkProxy('http://localhost:3004')
-const pTareas   = mkProxy('http://localhost:3001')
 const pTareas2  = mkProxy('http://localhost:3005')
 const pDil      = mkProxy('http://localhost:3002')
 const pOf       = mkProxy('http://localhost:3003')
-const pTareasV  = mkProxy('http://localhost:5173', { ws: true })
 const pPortalV  = mkProxy('http://localhost:5174', { ws: true })
 const pTareas2V = mkProxy('http://localhost:5175', { ws: true })
-
-// Rutas de API únicas de tareas
-const TAREAS_PATHS = [
-  '/api/tasks', '/api/notifications', '/api/report',
-  '/api/admin', '/api/inhabil-days', '/api/users', '/uploads',
-  '/api/convenios', '/api/enlace', '/api/daily-reports', '/api/dal',
-]
 
 // Rutas de API únicas de oficios (no necesitan prefijo /of)
 const OF_PATHS = ['/api/oficios', '/api/firmantes', '/api/anios', '/api/exportar']
@@ -66,16 +57,6 @@ app.use((req, res, next) => {
     return pDil(req, res, next)
   }
 
-  /* ── API: Tareas rutas únicas ─────────────────────────────────────── */
-  if (TAREAS_PATHS.some(p => url === p || url.startsWith(p + '/') || url.startsWith(p + '?'))) {
-    return pTareas(req, res, next)
-  }
-
-  /* ── API: POST /api/auth/sso → tareas (único: solo tareas tiene POST) */
-  if (url.startsWith('/api/auth/sso') && req.method === 'POST') {
-    return pTareas(req, res, next)
-  }
-
   /* ── API: Portal (auth, sso, usuarios — todo lo demás bajo /api) ──── */
   if (url.startsWith('/api/') || url === '/api') {
     return pPortal(req, res, next)
@@ -95,11 +76,6 @@ app.use((req, res, next) => {
     return pOf(req, res, next)
   }
 
-  /* ── Frontend: Tareas /tareas/* ─────────────────────────────────────── */
-  if (url === '/tareas' || url.startsWith('/tareas/') || url.startsWith('/tareas?')) {
-    return (isProd ? pTareas : pTareasV)(req, res, next)
-  }
-
   /* ── Frontend: Tareas2 /tareas2/* ───────────────────────────────────── */
   if (url === '/tareas2' || url.startsWith('/tareas2/') || url.startsWith('/tareas2?')) {
     return (isProd ? pTareas2 : pTareas2V)(req, res, next)
@@ -117,8 +93,6 @@ const server = app.listen(PORT, () =>
 server.on('upgrade', (req, socket, head) => {
   if (req.url.startsWith('/tareas2')) {
     pTareas2V.upgrade(req, socket, head)
-  } else if (req.url.startsWith('/tareas')) {
-    pTareasV.upgrade(req, socket, head)
   } else {
     pPortalV.upgrade(req, socket, head)
   }
