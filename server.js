@@ -9,12 +9,14 @@ const isProd = process.env.NODE_ENV !== 'development'
 const mkProxy = (target, opts = {}) =>
   createProxyMiddleware({ target, changeOrigin: true, ...opts })
 
-const pPortal  = mkProxy('http://localhost:3004')
-const pTareas  = mkProxy('http://localhost:3001')
-const pDil     = mkProxy('http://localhost:3002')
-const pOf      = mkProxy('http://localhost:3003')
-const pTareasV = mkProxy('http://localhost:5173', { ws: true })
-const pPortalV = mkProxy('http://localhost:5174', { ws: true })
+const pPortal   = mkProxy('http://localhost:3004')
+const pTareas   = mkProxy('http://localhost:3001')
+const pTareas2  = mkProxy('http://localhost:3005')
+const pDil      = mkProxy('http://localhost:3002')
+const pOf       = mkProxy('http://localhost:3003')
+const pTareasV  = mkProxy('http://localhost:5173', { ws: true })
+const pPortalV  = mkProxy('http://localhost:5174', { ws: true })
+const pTareas2V = mkProxy('http://localhost:5175', { ws: true })
 
 // Rutas de API únicas de tareas
 const TAREAS_PATHS = [
@@ -29,6 +31,18 @@ const OF_PATHS = ['/api/oficios', '/api/firmantes', '/api/anios', '/api/exportar
 // Usar UN SOLO middleware raíz para que Express NO quite el prefijo del path
 app.use((req, res, next) => {
   const url = req.url
+
+  /* ── API: Tareas2 (/api/t2/*) → :3005, rewrite /api/t2 → /api ─────── */
+  if (url.startsWith('/api/t2/') || url === '/api/t2') {
+    req.url = '/api' + url.slice('/api/t2'.length)
+    return pTareas2(req, res, next)
+  }
+
+  /* ── Uploads: Tareas2 (/uploads/t2/*) → :3005 ──────────────────────── */
+  if (url.startsWith('/uploads/t2/')) {
+    req.url = '/uploads' + url.slice('/uploads/t2'.length)
+    return pTareas2(req, res, next)
+  }
 
   /* ── API: Diligencias (/api/dil/*) → :3002, rewrite /api/dil → /api ── */
   if (url.startsWith('/api/dil/') || url === '/api/dil') {
@@ -86,6 +100,11 @@ app.use((req, res, next) => {
     return (isProd ? pTareas : pTareasV)(req, res, next)
   }
 
+  /* ── Frontend: Tareas2 /tareas2/* ───────────────────────────────────── */
+  if (url === '/tareas2' || url.startsWith('/tareas2/') || url.startsWith('/tareas2?')) {
+    return (isProd ? pTareas2 : pTareas2V)(req, res, next)
+  }
+
   /* ── Frontend: Portal (catch-all) ───────────────────────────────────── */
   return (isProd ? pPortal : pPortalV)(req, res, next)
 })
@@ -96,7 +115,9 @@ const server = app.listen(PORT, () =>
 
 // Redirigir WebSocket upgrades al Vite correcto
 server.on('upgrade', (req, socket, head) => {
-  if (req.url.startsWith('/tareas')) {
+  if (req.url.startsWith('/tareas2')) {
+    pTareas2V.upgrade(req, socket, head)
+  } else if (req.url.startsWith('/tareas')) {
     pTareasV.upgrade(req, socket, head)
   } else {
     pPortalV.upgrade(req, socket, head)
