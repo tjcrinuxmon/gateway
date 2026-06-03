@@ -9,12 +9,14 @@ const isProd = process.env.NODE_ENV !== 'development'
 const mkProxy = (target, opts = {}) =>
   createProxyMiddleware({ target, changeOrigin: true, ...opts })
 
-const pPortal   = mkProxy('http://localhost:3004')
-const pTareas2  = mkProxy('http://localhost:3005')
-const pDil      = mkProxy('http://localhost:3002')
-const pOf       = mkProxy('http://localhost:3003')
-const pPortalV  = mkProxy('http://localhost:5174', { ws: true })
-const pTareas2V = mkProxy('http://localhost:5175', { ws: true })
+// Targets configurables por env (defaults = puertos de prod). Permite levantar un
+// staging en el mismo servidor con otros puertos (p.ej. TARGET_PORTAL=http://localhost:3104).
+const pPortal   = mkProxy(process.env.TARGET_PORTAL       || 'http://localhost:3004')
+const pTareas2  = mkProxy(process.env.TARGET_TAREAS2      || 'http://localhost:3005')
+const pDil      = mkProxy(process.env.TARGET_DIL          || 'http://localhost:3002')
+const pOf       = mkProxy(process.env.TARGET_OFICIOS      || 'http://localhost:3003')
+const pPortalV  = mkProxy(process.env.TARGET_PORTAL_VITE  || 'http://localhost:5174', { ws: true })
+const pTareas2V = mkProxy(process.env.TARGET_TAREAS2_VITE || 'http://localhost:5175', { ws: true })
 
 // Rutas de API únicas de oficios (no necesitan prefijo /of)
 const OF_PATHS = ['/api/oficios', '/api/firmantes', '/api/anios', '/api/exportar']
@@ -85,7 +87,7 @@ app.use((req, res, next) => {
   return (isProd ? pPortal : pPortalV)(req, res, next)
 })
 
-const server = app.listen(PORT, () =>
+const server = app.listen(PORT, '0.0.0.0', () =>
   console.log(`\n  INE DEAJ Gateway → http://localhost:${PORT}\n`)
 )
 
