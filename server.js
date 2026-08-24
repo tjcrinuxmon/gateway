@@ -15,7 +15,7 @@ const pPortal   = mkProxy(process.env.TARGET_PORTAL       || 'http://localhost:3
 const pTareas2  = mkProxy(process.env.TARGET_TAREAS2      || 'http://localhost:3005')
 const pDil      = mkProxy(process.env.TARGET_DIL          || 'http://localhost:3002')
 const pOf       = mkProxy(process.env.TARGET_OFICIOS      || 'http://localhost:3003')
-const pRelev    = mkProxy(process.env.TARGET_RELEVANTES   || 'http://localhost:3006')
+const pRelev    = mkProxy(process.env.TARGET_RELEVANTES   || 'http://localhost:3007')
 const pPortalV  = mkProxy(process.env.TARGET_PORTAL_VITE  || 'http://localhost:5174', { ws: true })
 const pTareas2V = mkProxy(process.env.TARGET_TAREAS2_VITE || 'http://localhost:5175', { ws: true })
 
