@@ -15,6 +15,7 @@ const pPortal   = mkProxy(process.env.TARGET_PORTAL       || 'http://localhost:3
 const pTareas2  = mkProxy(process.env.TARGET_TAREAS2      || 'http://localhost:3005')
 const pDil      = mkProxy(process.env.TARGET_DIL          || 'http://localhost:3002')
 const pOf       = mkProxy(process.env.TARGET_OFICIOS      || 'http://localhost:3003')
+const pRelev    = mkProxy(process.env.TARGET_RELEVANTES   || 'http://localhost:3006')
 const pPortalV  = mkProxy(process.env.TARGET_PORTAL_VITE  || 'http://localhost:5174', { ws: true })
 const pTareas2V = mkProxy(process.env.TARGET_TAREAS2_VITE || 'http://localhost:5175', { ws: true })
 
@@ -49,6 +50,18 @@ app.use((req, res, next) => {
     return pOf(req, res, next)
   }
 
+  /* ── API: Relevantes (/api/rel/*) → :3006, rewrite /api/rel → /api ── */
+  if (url.startsWith('/api/rel/') || url === '/api/rel') {
+    req.url = '/api' + url.slice('/api/rel'.length)
+    return pRelev(req, res, next)
+  }
+
+  /* ── Uploads: Relevantes (/uploads/rel/*) → :3006 ──────────────────── */
+  if (url.startsWith('/uploads/rel/')) {
+    req.url = '/uploads' + url.slice('/uploads/rel'.length)
+    return pRelev(req, res, next)
+  }
+
   /* ── API: Oficios rutas únicas (no tienen conflicto) ──────────────── */
   if (OF_PATHS.some(p => url === p || url.startsWith(p + '/') || url.startsWith(p + '?'))) {
     return pOf(req, res, next)
@@ -76,6 +89,13 @@ app.use((req, res, next) => {
     const rest = url.slice('/oficios'.length)
     req.url = rest.startsWith('/') ? rest : ('/' + rest)
     return pOf(req, res, next)
+  }
+
+  /* ── Frontend: Relevantes /relevantes/* → :3006 (sin el prefijo) ──── */
+  if (url === '/relevantes' || url.startsWith('/relevantes/') || url.startsWith('/relevantes?')) {
+    const rest = url.slice('/relevantes'.length)
+    req.url = rest.startsWith('/') ? rest : ('/' + rest)
+    return pRelev(req, res, next)
   }
 
   /* ── Frontend: Tareas2 /tareas2/* ───────────────────────────────────── */
